@@ -10,6 +10,15 @@ app.use(cors({
 
 
 }))
+
+//ROUTEs
+
+import userRouter from "./routes/user.routes.js"
+// ROUTES DECLEARTAION 
+app.use("/api/v1/users" , userRouter)
+
+
+
 // To accept JSON
 app.use(express.json({limit:"16kb"}))
 
