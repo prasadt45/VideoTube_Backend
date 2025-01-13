@@ -1,12 +1,12 @@
 // file already uploadded in server now take local path from server and upoload to cloudinary
- import {v2 as cloud} from "cloudinary"
+ import {v2 as cloudinary} from "cloudinary"
  import fs from "fs"
 
 
  cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-    api_key: CLOUDINARY_API_KEY, 
-    api_secret: CLOUDINARY_API_SECRET 
+    api_key: process.env.CLOUDINARY_API_KEY, 
+    api_secret: process.env.CLOUDINARY_API_SECRET 
 });
 
 const uploadOnCloudinary = async (localfilepath)=>{
