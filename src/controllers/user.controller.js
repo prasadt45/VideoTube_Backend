@@ -7,6 +7,8 @@ import { Apiresponce } from '../utils/Apiresponce.js';
 const registerUser = asyncHandler(async (req, res) => {
     // Get User details from frontend checked
     const { fullname, email, username, password } = req.body
+    console.log(req.body)
+
     console.log("email", email)
     // validation , format checking 
     if (
@@ -16,7 +18,7 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All Fiels Are required ")
     }
     // check user already exists  
-    const exixstedUser = User.findOne({
+    const exixstedUser = await  User.findOne({
         $or: [{ username }, { email }]
     })
 
@@ -28,7 +30,11 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // multer takes file to server and we get path where it stored 
     const avatarLocalPath = req.files?.avatar[0]?.path
-    const coverImageLocalPath = req.files?.coverImage[0]?.path
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path
+    let coverImageLocalPath ;
+    if(req.files && Array.isArray(req.files.coverImage)&& registerUser.files.coverImage.length >0){
+        coverImageLocalPath = req.files?.coverImage[0]?.path
+    }
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar is required")
@@ -41,6 +47,7 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!avatar) {
         throw new ApiError(400, "Avatar is required")
     }
+    console.log(req.files)
     // create user object -> craete entry in dB .
     const user =  await User.create({
         fullname,
@@ -64,7 +71,9 @@ const registerUser = asyncHandler(async (req, res) => {
    return res.status(201).json(
     new Apiresponce(200 , createdUser , "User Created Successfully"  )
    )
+ 
 
+   
 
 
 });
