@@ -1,7 +1,8 @@
-import { ApiError } from "../utils/ApiError";
-import { asyncHandler } from "../utils/asyncHandler";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 import {User} from "../models/user.model.js"
+
 
 // FOR LOGGING OUT USER WE NEED TO REMOVE THE JWT TOKEN FROM LOCAL STORAGE AND GET USER 
 export const verifyJWT = asyncHandler(async(req , res , next)=>{
