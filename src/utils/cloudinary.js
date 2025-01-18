@@ -1,6 +1,8 @@
 // file already uploadded in server now take local path from server and upoload to cloudinary
  import {v2 as cloudinary} from "cloudinary"
  import fs from "fs"
+import { ApiError } from "./ApiError.js";
+
 
 
  cloudinary.config({ 
@@ -29,8 +31,21 @@ const uploadOnCloudinary = async (localfilepath)=>{
     }
 
 }
+const deltefromcloudinary = async(oldfilepath)=>{
+    try {
+        if(!oldfilepath){
+            throw new ApiError(400, 'oldfilepath is required')
+        }
+        const result = await cloudinary.uploader.destroy(oldfilepath)
+        console.log("File Has Been Removed From Cloudinary") ;
+        return result ; 
+    } catch (error) {
+        console.log("Error Removing File From Cloudinary") ;
+        
+    }
+}
 
-export {uploadOnCloudinary}
+export {uploadOnCloudinary , deltefromcloudinary}
 
 
 

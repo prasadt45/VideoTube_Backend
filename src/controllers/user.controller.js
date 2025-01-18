@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
-import { uploadOnCloudinary } from "../utils/cloudinary.js"
+import { uploadOnCloudinary , deltefromcloudinary } from "../utils/cloudinary.js"
 import { Apiresponce } from '../utils/Apiresponce.js';
 import jwt from "jsonwebtoken"
 
@@ -250,7 +250,7 @@ const updateAccountDetails = asyncHandler(async(req , res)=>{
         throw new ApiError(400 , "All Fields Required") ;
 
     }
-    const user = User.findByIdAndUpdate(
+    const user = await  User.findByIdAndUpdate(
         req.user?._id ,
         {
             $set: {
@@ -308,6 +308,15 @@ const updateUserCoverImage = asyncHandler(async(req , res)=>{
     if(!coverImage.url){
         throw new ApiError(400 , 'Error while uploading cover image')
         }
+        const userForDeleteOperation = await User.findById(req.user._id) ;
+        if(!userForDeleteOperation){
+            throw new ApiError(404 , 'User not found')
+        }
+        const oldfilepath = userForDeleteOperation.coverImage ; 
+         if(userForDeleteOperation){
+            await deltefromcloudinary(oldfilepath)
+         }
+        
         const user = await User.findByIdAndUpdate(
             req.user._id ,
             {
@@ -319,6 +328,7 @@ const updateUserCoverImage = asyncHandler(async(req , res)=>{
                 new : true
             }
         ).select("-password")
+
         return res.status(200)
     .json(
         new Apiresponce(
