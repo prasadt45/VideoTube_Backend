@@ -417,6 +417,62 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
    )
 
 })
+// example of usage of SUB-PIPELINE
+const getWatchHistory = asyncHandler(async(req ,res)=>{
+    const user = await User.aggregate(
+        [
+            {
+              $match:{
+                _id : new mongoose.Types.ObjectId(req.user._id)
+              }  
+            } , 
+            {
+                $lookup:{
+                    from : "videos" , 
+                    localField : "watchHistory" , 
+                    foreignField : "_id" , 
+                    as:"watchHistory" ,
+                    pipeline :[
+                        {
+                            $lookup:{
+                                from : "users" , 
+                                localField : "owner" ,
+                                foreignField :"_id" ,
+                                as : "owner" ,
+                                pipeline:[
+                                    {
+                                        $project:{
+                                            fullname : 1 , 
+                                            username : 1, 
+                                            avatar : 1
+                                        }
+                                    }
+                                ]
+                            }
+                        } , 
+                        {
+                            // as we know aggregate returns an array and we then fetch 1st obj instead of that folwwing code wriiten
+                           $addFields:{
+                            owner:{ 
+                                $first :"$owner"
+                            }
+                           }
+                        }
+                    ]
+                }
+            }
+        ]
+    )
+    return res.status(200).json(
+        new Apiresponce(
+            200 , 
+            user[0].watchHistory ,
+            "Watch History Fetched Successfully"
+        )
+    )
+})
+
+
 
 export {
     registerUser,
@@ -428,7 +484,8 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage , 
-    getUserChannelProfile
+    getUserChannelProfile , 
+    getWatchHistory
 };
 
 
