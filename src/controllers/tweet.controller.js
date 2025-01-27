@@ -102,8 +102,59 @@ const deleteTweet = asyncHandler(async (req , res)=>{
 
 })
 
-const getalltweet = asyncHandler(async (req , res)=>{
-    
-}) 
+const getalltweet = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) {
+        throw new ApiError(401, "Unauthorized");
+    }
+
+    const tweets = await Tweet.aggregate([
+        {
+            $match: {
+                owner: new mongoose.Types.ObjectId(user._id)
+
+            }
+        }, 
+        { 
+            $lookup: {
+                from: "users",  
+                localField: "owner",
+                foreignField: "_id",
+                as: "ownerDetails",
+                pipeline: [
+                    {
+                        $project: {
+                            username: 1 
+                        }
+                    }
+                ]
+            } 
+        },
+        { 
+            $addFields: {
+                owner: { $first: "$ownerDetails" }
+            }
+        }, 
+        { 
+            $sort: { createdAt: -1 } 
+        }, 
+        { 
+            $project: {
+                "owner.username": 1, 
+                createdAt: 1,
+                content: 1
+            }
+        }
+    ]);
+
+    res.status(200).json(
+        new Apiresponce(
+            200, 
+            tweets, 
+            "Tweets Fetched Successfully"
+        )
+    );
+});
+
 
 export {createTweet , updateTweet , deleteTweet , getalltweet} ;

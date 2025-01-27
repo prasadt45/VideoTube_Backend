@@ -7,7 +7,7 @@ const tweetrouter = Router();
 tweetrouter.route("/create-tweet").post(verifyJWT, createTweet);
 tweetrouter.route("/delete-tweet/:tweetid").patch(verifyJWT, deleteTweet);
 tweetrouter.route("/update-tweet/:tweetid").patch(verifyJWT, updateTweet);
-tweetrouter.route("/get-all-tweets").get(getalltweet);
+tweetrouter.route("/get-all-tweets").get(verifyJWT , getalltweet);
 
 
 
