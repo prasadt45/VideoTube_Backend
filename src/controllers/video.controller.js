@@ -52,4 +52,67 @@ const uploadVideo = asyncHandler(async (req, res) => {
     );
 });
 
-export { uploadVideo };
+const getvideobyid = asyncHandler(async (req , res)=>{
+    const {videoid }=  req.params ; 
+    if(!videoid){
+        throw new ApiError(400 , "Video id is required");
+    }
+    const video = await Video.findById(videoid);
+    if(!video){
+        throw new ApiError(404 , "Video not found");
+    }
+    return res.status(200)
+    .json(
+        new Apiresponce(
+            200 ,
+            video ,
+            "Video found successfully" 
+        )
+    )
+})
+
+const updatevideo = asyncHandler(async (req , res)=>{
+    const {videoid }=  req.params ;
+    const {title , description , isPublished} = req.body;
+    if(!videoid){
+        throw new ApiError(400 , "Video id is required");
+    }
+    const oldvideo = await Video.findById(videoid);
+    if(!oldvideo){
+        throw new ApiError(404 , "Video not found");
+        }
+
+    const newvideofilepath = req.files?.videoFile[0].path;
+    const newthumbnailfilepath = req.files?.thumbnail[0].path;
+
+    const newvideo = await uploadOnCloudinary(newvideofilepath);
+    const newthumbnail = await uploadOnCloudinary(newthumbnailfilepath);
+
+    const video = await Video.findByIdAndUpdate(videoid , {
+        title ,
+        description ,
+        isPublished ,
+        videoFile : newvideo.url ,  
+        thumbnail : newthumbnail.url ,
+        duration : newvideo.duration
+    
+    }
+    , {new:true}
+    );
+
+    return res.status(200)
+    .json(
+        new Apiresponce(
+            200 ,
+            video ,
+            "Video updated successfully"
+        )
+        )
+
+})
+
+const deletevideo = asyncHandler(async(req , res)=>{
+
+})
+
+export { uploadVideo , getvideobyid  , updatevideo , deletevideo};
