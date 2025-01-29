@@ -11,7 +11,6 @@ router.route("/upload-video").post(verifyJWT ,
             {
                 name : "videoFile" ,
                 maxCount : 1
-
             } , 
             {
                 name : "thumbnail" ,
@@ -22,7 +21,7 @@ router.route("/upload-video").post(verifyJWT ,
     , 
     uploadVideo
 )
-// router.route("/get-video/:videoid").get(verifyJWT, getvideobyid);
+
 router.route("/get-video/:videoid").get(verifyJWT , getvideobyid)
 router.route("/update-video/:videoid").post(verifyJWT ,
     upload.fields(
