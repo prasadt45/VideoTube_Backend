@@ -1,10 +1,96 @@
-import mongoose from "mongoose";
+import {mongoose , isValidObjectId } from "mongoose";
 import { Video } from "../models/video.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deletefromcloudinary } from "../utils/cloudinary.js";
 import { Apiresponce } from "../utils/Apiresponce.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+
+
+
+const getAllVideos = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+    const pipeline = [];
+
+    // ✅ $search must be the first stage
+    if (query) {
+        pipeline.push({
+            $search: {
+                index: "search-videos", // Make sure this is the correct index name
+                text: {
+                    query: query,
+                    path: ["title", "description"]
+                }
+            }
+        });
+    }
+
+    // ✅ $match can come after $search
+    if (userId) {
+        pipeline.push({
+            $match: {
+                owner: new mongoose.Types.ObjectId(userId)
+            }
+        });
+    }
+
+    pipeline.push({
+        $match: {
+            isPublished: true
+        }
+    });
+
+    // ✅ Sorting should be after $search
+    if (sortBy && sortType) {
+        pipeline.push({
+            $sort: {
+                [sortBy]: sortType === "asc" ? 1 : -1
+            }
+        });
+    } else {
+        pipeline.push({
+            $sort: {
+                createdAt: -1
+            }
+        });
+    }
+
+    // ✅ Lookup (Joining Users)
+    pipeline.push({
+        $lookup: {
+            from: "users",
+            localField: "owner",
+            foreignField: "_id",
+            as: "owner",
+            pipeline: [
+                {
+                    $project: {
+                        username: 1,
+                        "avatar.url": 1
+                    }
+                }
+            ]
+        }
+    });
+
+    pipeline.push({
+        $unwind: "$owner"
+    });
+
+    // ✅ Pagination
+    const options = {
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10)
+    };
+
+    const videoData = await Video.aggregatePaginate(Video.aggregate(pipeline), options);
+
+    return res.status(200).json(new Apiresponce(200, videoData, "Videos fetched successfully"));
+});
+
+
+
 
 const uploadVideo = asyncHandler(async (req, res) => {
     const { title, description } = req.body;
@@ -104,7 +190,67 @@ const updatevideo = asyncHandler(async (req , res) => {
 })
 
 const deletevideo = asyncHandler(async (req, res) => {
+    const {videoid} = req.params;
+
+    if (!videoid) {
+        throw new ApiError(400, "Video id is required");
+    }
+
+    // Find the video by ID
+    const video = await Video.findById(videoid);
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+    const videoFileUrl = video.videoFile;
+    const public_id = videoFileUrl.split('/')[7].split('.')[0]; // Extract the public ID part
+    console.log("Extracted Public ID:", public_id);
+
+    // Call deletefromcloudinary with the correct public_id
+    const deletedFromCloudinary = await deletefromcloudinary(public_id);
+    if (!deletedFromCloudinary) {
+        throw new ApiError(500, "Video not deleted from Cloudinary");
+    }
+
+    // Delete the video from the database
+    const deletedVideo = await Video.findByIdAndDelete(videoid);
+    if (!deletedVideo) {
+        throw new ApiError(404, "Video not found in database");
+    }
+
+    // Respond with success message
+    return res.status(200).json(
+        new Apiresponce(200, deletedVideo, "Video deleted successfully")
+    );
+});
+
+
+const togglevideostatus = asyncHandler(async (req , res)=>{
+    const {videoid} = req.params;
+    if (!videoid) {
+        throw new ApiError(400, "Video id is required");
+    }
+    const video = await Video.findById(videoid);
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    if(req.user._id.toString() !== video.owner.toString()){
+        throw new ApiError(403, "You are not authorized to update this video");
+    }
+
+    const updatedstatus = await Video.findByIdAndUpdate(
+        videoid,
+        { isPublished: !video.isPublished },
+        { new: true }
+    )
+
+    return res.status(200).json(
+        new Apiresponce(200, updatedstatus, "Video status updated successfully")
+    )
 
 })
 
-export { uploadVideo, getvideobyid, updatevideo, deletevideo };
+
+
+
+export { uploadVideo, getvideobyid, updatevideo, deletevideo , togglevideostatus , getAllVideos };

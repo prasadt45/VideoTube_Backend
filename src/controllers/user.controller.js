@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
-import { uploadOnCloudinary, deltefromcloudinary } from "../utils/cloudinary.js"
+import { uploadOnCloudinary, deletefromcloudinary } from "../utils/cloudinary.js"
 import { Apiresponce } from '../utils/Apiresponce.js';
 import jwt from "jsonwebtoken"
 
@@ -314,7 +314,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     }
     const oldfilepath = userForDeleteOperation.coverImage;
     if (userForDeleteOperation) {
-        await deltefromcloudinary(oldfilepath)
+        await deletefromcloudinary(oldfilepath)
     }
 
     const user = await User.findByIdAndUpdate(

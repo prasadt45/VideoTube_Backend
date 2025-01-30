@@ -31,21 +31,35 @@ const uploadOnCloudinary = async (localfilepath)=>{
     }
 
 }
-const deltefromcloudinary = async(oldfilepath)=>{
+const deletefromcloudinary = async (oldfilepath) => {
     try {
-        if(!oldfilepath){
-            throw new ApiError(400, 'oldfilepath is required')
+        if (!oldfilepath) {
+            throw new ApiError(400, 'oldfilepath is required');
         }
-        const result = await cloudinary.uploader.destroy(oldfilepath)
-        console.log("File Has Been Removed From Cloudinary") ;
-        return result ; 
-    } catch (error) {
-        console.log("Error Removing File From Cloudinary") ;
-        
-    }
-}
 
-export {uploadOnCloudinary , deltefromcloudinary}
+        console.log("Attempting to delete file from Cloudinary with public_id:", oldfilepath);
+
+        // Attempt to destroy the file using Cloudinary's uploader.destroy
+        const result = await cloudinary.uploader.destroy(oldfilepath);
+
+        // Log the full Cloudinary response for debugging
+        console.log("Cloudinary Response:", result);
+
+       
+        console.log("File has been successfully removed from Cloudinary.");
+        return result;
+
+    } catch (error) {
+        // Log the detailed error
+        console.log("Error Removing File From Cloudinary:", error.message);
+        throw new ApiError(500, `Error Removing File From Cloudinary: ${error.message}`);
+    }
+};
+
+
+
+
+export {uploadOnCloudinary , deletefromcloudinary}
 
 
 
