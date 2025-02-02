@@ -12,12 +12,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
     const pipeline = [];
-
-    // ✅ $search must be the first stage
     if (query) {
         pipeline.push({
             $search: {
-                index: "search-videos", // Make sure this is the correct index name
+                index: "search-videos", 
                 text: {
                     query: query,
                     path: ["title", "description"]
@@ -25,8 +23,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
             }
         });
     }
-
-    // ✅ $match can come after $search
     if (userId) {
         pipeline.push({
             $match: {
@@ -34,14 +30,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
             }
         });
     }
-
     pipeline.push({
         $match: {
             isPublished: true
         }
     });
-
-    // ✅ Sorting should be after $search
     if (sortBy && sortType) {
         pipeline.push({
             $sort: {
@@ -55,8 +48,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
             }
         });
     }
-
-    // ✅ Lookup (Joining Users)
     pipeline.push({
         $lookup: {
             from: "users",
@@ -77,14 +68,14 @@ const getAllVideos = asyncHandler(async (req, res) => {
     pipeline.push({
         $unwind: "$owner"
     });
+    const totalResults = await Video.aggregate([...pipeline, { $count: "total" }]);
+    const total = totalResults.length > 0 ? totalResults[0].total : 0;
 
-    // ✅ Pagination
-    const options = {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10)
-    };
+    const pageNum = parseInt(page, 10);
+    const pageSize = parseInt(limit, 10);
+    pipeline.push({ $skip: (pageNum - 1) * pageSize }, { $limit: pageSize });
 
-    const videoData = await Video.aggregatePaginate(Video.aggregate(pipeline), options);
+    const videoData = await Video.aggregate(pipeline);
 
     return res.status(200).json(new Apiresponce(200, videoData, "Videos fetched successfully"));
 });
