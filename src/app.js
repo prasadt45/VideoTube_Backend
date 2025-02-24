@@ -5,6 +5,7 @@ import userRouter from "./routes/user.routes.js";
 import tweetrouter from "./routes/tweet.routes.js";
 import videoRouter from "./routes/video.routes.js";
 import commentrouter from "./routes/comment.routes.js";
+import likerouter from "./routes/like.routes.js";
 
 const app = express();
 
@@ -31,5 +32,6 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/tweets", tweetrouter);
 app.use("/api/v1/videos", videoRouter);
 app.use("/api/v1/comments", commentrouter);
+app.use("/api/v1/likes", likerouter);
 
 export { app };
