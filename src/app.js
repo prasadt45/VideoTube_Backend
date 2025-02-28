@@ -7,6 +7,7 @@ import videoRouter from "./routes/video.routes.js";
 import commentrouter from "./routes/comment.routes.js";
 import likerouter from "./routes/like.routes.js";
 import subscriptionrouter from "./routes/subscription.routes.js";
+import playlistrouter from  "./routes/playlist.routes.js";
 
 const app = express();
 
@@ -35,5 +36,6 @@ app.use("/api/v1/videos", videoRouter);
 app.use("/api/v1/comments", commentrouter);
 app.use("/api/v1/likes", likerouter);
 app.use("/api/v1/subscriptions", subscriptionrouter);
+app.use("/api/v1/playlists", playlistrouter);
 
 export { app };
